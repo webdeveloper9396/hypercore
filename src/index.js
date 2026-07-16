@@ -13,6 +13,8 @@ import CSSOptimizer from "./modules/CSSOptimizer/index.js";
 
 import JSOptimizer from "./modules/JSOptimizer/index.js";
 
+import FontOptimizer from "./modules/FontOptimizer/index.js";
+
 
 // Create HyperCore instance
 
@@ -34,6 +36,8 @@ hypercore.register(LCPOptimizer);
 hypercore.register(CSSOptimizer);
 
 hypercore.register(JSOptimizer);
+
+hypercore.register(FontOptimizer);
 
 
 // Start Engine
