@@ -23,6 +23,8 @@ import PreloadOptimizer from "./modules/PreloadOptimizer/index.js";
 
 import AnalyticsOptimizer from "./modules/AnalyticsOptimizer/index.js";
 
+import Debug from "./modules/Debug/index.js";
+
 
 // Create HyperCore instance
 
@@ -54,6 +56,8 @@ hypercore.register(DOMOptimizer);
 hypercore.register(PreloadOptimizer);
 
 hypercore.register(AnalyticsOptimizer);
+
+hypercore.register(Debug);
 
 
 // Start Engine
