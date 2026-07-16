@@ -6,8 +6,17 @@
 
 import { HyperCore } from "./core/Engine.js";
 
-const hypercore = new HyperCore();
+
+const hypercore = new HyperCore({
+
+    debug: true,
+
+    safeMode: true
+
+});
+
 
 hypercore.init();
+
 
 export default hypercore;
