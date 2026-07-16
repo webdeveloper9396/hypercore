@@ -11,6 +11,8 @@ import LCPOptimizer from "./modules/LCPOptimizer/index.js";
 
 import CSSOptimizer from "./modules/CSSOptimizer/index.js";
 
+import JSOptimizer from "./modules/JSOptimizer/index.js";
+
 
 // Create HyperCore instance
 
@@ -30,6 +32,8 @@ hypercore.register(ImageOptimizer);
 hypercore.register(LCPOptimizer);
 
 hypercore.register(CSSOptimizer);
+
+hypercore.register(JSOptimizer);
 
 
 // Start Engine
