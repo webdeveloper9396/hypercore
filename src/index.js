@@ -21,6 +21,8 @@ import DOMOptimizer from "./modules/DOMOptimizer/index.js";
 
 import PreloadOptimizer from "./modules/PreloadOptimizer/index.js";
 
+import AnalyticsOptimizer from "./modules/AnalyticsOptimizer/index.js";
+
 
 // Create HyperCore instance
 
@@ -50,6 +52,8 @@ hypercore.register(LazyLoader);
 hypercore.register(DOMOptimizer);
 
 hypercore.register(PreloadOptimizer);
+
+hypercore.register(AnalyticsOptimizer);
 
 
 // Start Engine
