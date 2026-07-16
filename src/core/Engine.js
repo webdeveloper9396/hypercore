@@ -13,10 +13,16 @@ import Framework from "./Framework.js";
 
 import Version from "./Version.js";
 
+import Config from "./Config.js";
+
+import Loader from "./Loader.js";
+
+
 
 
 
 export class HyperCore {
+
 
 
     constructor(options = {}){
@@ -28,15 +34,15 @@ export class HyperCore {
 
 
 
+
+
         this.options = {
 
 
-            debug:
-            true,
+            debug:true,
 
 
-            safeMode:
-            true,
+            safeMode:true,
 
 
             ...options
@@ -48,22 +54,43 @@ export class HyperCore {
 
 
 
-        this.modules = [];
 
+        /**
+         * Configuration System
+         */
 
-
-        this.moduleNames =
-            new Set();
-
-
-
-
-        this.logger =
-            new Logger(
-                this.options.debug
+        this.config =
+            new Config(
+                this.options.config || {}
             );
 
 
+
+
+
+
+
+
+        /**
+         * Logger
+         */
+
+        this.logger =
+            new Logger(
+
+                this.options.debug
+
+            );
+
+
+
+
+
+
+
+        /**
+         * Event System
+         */
 
         this.events =
             new Events();
@@ -71,8 +98,42 @@ export class HyperCore {
 
 
 
+
+
+
+        /**
+         * Framework Detection
+         */
+
         this.framework =
             Framework.detect();
+
+
+
+
+
+
+
+        /**
+         * Module Loader
+         */
+
+        this.loader =
+            new Loader(
+                this
+            );
+
+
+
+
+
+
+
+
+        this.modules =
+            [];
+
+
 
 
 
@@ -82,19 +143,29 @@ export class HyperCore {
 
 
 
+
+
+
+
+        /**
+         * Shared Module Context
+         */
+
+
         this.context = {
 
 
-            logger:
-            this.logger,
+            core:this,
 
 
-            events:
-            this.events,
+            config:this.config,
 
 
-            core:
-            this
+            logger:this.logger,
+
+
+            events:this.events
+
 
 
         };
@@ -102,7 +173,12 @@ export class HyperCore {
 
 
 
+
+
     }
+
+
+
 
 
 
@@ -118,65 +194,14 @@ export class HyperCore {
 
 
 
-        if(
-            !module ||
-            !module.name
-        ){
-
-
-            this.logger.warn(
-                "Invalid module skipped"
-            );
-
-
-            return this;
-
-
-        }
-
-
-
-
-
-
-        if(
-            this.moduleNames.has(
-                module.name
-            )
-        ){
-
-
-            this.logger.warn(
-                `Duplicate module ignored: ${module.name}`
-            );
-
-
-            return this;
-
-
-        }
-
-
-
-
-
-
-        this.modules.push(
+        this.loader.register(
             module
         );
 
 
 
-        this.moduleNames.add(
-            module.name
-        );
-
-
-
-
-        this.logger.info(
-            `Module Registered: ${module.name}`
-        );
+        this.modules =
+            this.loader.modules;
 
 
 
@@ -194,17 +219,18 @@ export class HyperCore {
 
 
     /**
-     * Initialize Engine
+     * Initialize HyperCore
      */
 
 
-    init(){
+    async init(){
 
 
 
         if(
             this.initialized
         ){
+
 
 
             this.logger.warn(
@@ -221,9 +247,12 @@ export class HyperCore {
 
 
 
+
         this.logger.info(
             `HyperCore Engine v${this.version} Started 🚀`
         );
+
+
 
 
 
@@ -237,103 +266,50 @@ export class HyperCore {
 
 
 
-        this.modules.forEach(
-            module=>{
-
-
-                this.loadModule(
-                    module
-                );
-
-
-            }
-        );
-
-
-
-
-
-        this.initialized =
-            true;
-
-
-
-
-        this.events.emit(
-            "core:ready",
-            {
-
-                version:
-                this.version,
-
-
-                modules:
-                this.modules.length
-
-            }
-        );
-
-
-
-
-
-        this.logger.info(
-            "HyperCore Ready ✅"
-        );
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Load Module Safely
-     */
-
-
-    loadModule(module){
-
 
 
         try{
 
 
-            if(
-                typeof module.init !== "function"
-            ){
 
-
-                this.logger.warn(
-                    `${module.name} has no init method`
-                );
-
-
-                return;
-
-
-            }
+            await this.loader.loadAll();
 
 
 
 
 
-            module.init(
-                this.context
+            this.initialized =
+                true;
+
+
+
+
+
+
+            this.events.emit(
+                "core:ready",
+                {
+
+
+                    version:
+                    this.version,
+
+
+                    modules:
+                    this.modules.length
+
+
+                }
             );
 
 
 
 
+
+
+
             this.logger.info(
-                `${module.name} initialized`
+                "HyperCore Ready ✅"
             );
 
 
@@ -341,37 +317,37 @@ export class HyperCore {
 
 
         }
+
 
 
         catch(error){
 
 
 
+            this.logger.error(
+                "HyperCore initialization failed",
+                error
+            );
+
+
+
+
+
             if(
-                this.options.safeMode
+                !this.options.safeMode
             ){
 
 
-                this.logger.error(
-                    `${module.name} failed safely`,
-                    error
-                );
-
-
-                return;
+                throw error;
 
 
             }
 
 
 
-
-
-            throw error;
-
-
-
         }
+
+
 
 
 
@@ -393,9 +369,12 @@ export class HyperCore {
     getModule(name){
 
 
+
         return this.modules.find(
+
             module =>
             module.name === name
+
         );
 
 
@@ -407,8 +386,53 @@ export class HyperCore {
 
 
 
+
+
     /**
-     * Destroy Engine
+     * Get Status
+     */
+
+
+    status(){
+
+
+
+        return {
+
+
+            version:
+            this.version,
+
+
+            framework:
+            this.framework,
+
+
+            initialized:
+            this.initialized,
+
+
+            modules:
+            this.loader.getStatus()
+
+
+
+        };
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+    /**
+     * Destroy HyperCore
      */
 
 
@@ -416,9 +440,9 @@ export class HyperCore {
 
 
 
-        this.modules = [];
+        this.loader.modules = [];
 
-        this.moduleNames.clear();
+        this.modules = [];
 
 
 
@@ -427,9 +451,13 @@ export class HyperCore {
 
 
 
+
+
         this.events.emit(
             "core:destroy"
         );
+
+
 
 
 
