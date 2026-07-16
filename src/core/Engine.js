@@ -1,57 +1,195 @@
 /**
  * HyperCore Engine
- * Main Controller
- *
+ * Frontend Performance Optimization Engine
  * Version: 1.0.0
  */
 
-import { Logger } from "./Logger.js";
-import { Config } from "./Config.js";
-import { Framework } from "./Framework.js";
-import { Loader } from "./Loader.js";
-import { Events } from "./Events.js";
-import { Version } from "./Version.js";
+
+import Logger from "./Logger.js";
+
+import Events from "./Events.js";
+
+import Framework from "./Framework.js";
+
+import Version from "./Version.js";
+
+
 
 
 export class HyperCore {
 
 
-    constructor(options = {}) {
+    constructor(options = {}){
 
 
-        // Configuration
-        this.config = new Config(options);
+        this.version =
+            Version.version ||
+            "1.0.0";
 
 
-        // Logger
-        this.logger = new Logger(
-            this.config.get("debug")
-        );
+
+        this.options = {
 
 
-        // Framework detector
-        this.framework = new Framework();
+            debug:
+            true,
 
 
-        // Module loader
-        this.loader = new Loader(
-            this.logger
-        );
+            safeMode:
+            true,
 
 
-        // Event system
-        this.events = new Events();
+            ...options
 
 
-        // Version
-        this.version = new Version();
+        };
 
 
-        // State
-        this.started = false;
+
+
+
+        this.modules = [];
+
+
+
+        this.moduleNames =
+            new Set();
+
+
+
+
+        this.logger =
+            new Logger(
+                this.options.debug
+            );
+
+
+
+        this.events =
+            new Events();
+
+
+
+
+        this.framework =
+            Framework.detect();
+
+
+
+        this.initialized =
+            false;
+
+
+
+
+        this.context = {
+
+
+            logger:
+            this.logger,
+
+
+            events:
+            this.events,
+
+
+            core:
+            this
+
+
+        };
+
+
 
 
     }
+
+
+
+
+
+
+    /**
+     * Register Module
+     */
+
+
+    register(module){
+
+
+
+        if(
+            !module ||
+            !module.name
+        ){
+
+
+            this.logger.warn(
+                "Invalid module skipped"
+            );
+
+
+            return this;
+
+
+        }
+
+
+
+
+
+
+        if(
+            this.moduleNames.has(
+                module.name
+            )
+        ){
+
+
+            this.logger.warn(
+                `Duplicate module ignored: ${module.name}`
+            );
+
+
+            return this;
+
+
+        }
+
+
+
+
+
+
+        this.modules.push(
+            module
+        );
+
+
+
+        this.moduleNames.add(
+            module.name
+        );
+
+
+
+
+        this.logger.info(
+            `Module Registered: ${module.name}`
+        );
+
+
+
+        return this;
+
+
+    }
+
+
+
+
+
+
 
 
 
@@ -59,99 +197,146 @@ export class HyperCore {
      * Initialize Engine
      */
 
-    init() {
+
+    init(){
 
 
-        if (this.started) {
+
+        if(
+            this.initialized
+        ){
+
 
             this.logger.warn(
                 "HyperCore already initialized"
             );
 
+
             return;
+
 
         }
 
 
 
-        try {
+
+
+        this.logger.info(
+            `HyperCore Engine v${this.version} Started 🚀`
+        );
+
+
+
+
+
+        this.logger.info(
+            `Framework Detected: ${this.framework}`
+        );
+
+
+
+
+
+        this.modules.forEach(
+            module=>{
+
+
+                this.loadModule(
+                    module
+                );
+
+
+            }
+        );
+
+
+
+
+
+        this.initialized =
+            true;
+
+
+
+
+        this.events.emit(
+            "core:ready",
+            {
+
+                version:
+                this.version,
+
+
+                modules:
+                this.modules.length
+
+            }
+        );
+
+
+
+
+
+        this.logger.info(
+            "HyperCore Ready ✅"
+        );
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Load Module Safely
+     */
+
+
+    loadModule(module){
+
+
+
+        try{
+
+
+            if(
+                typeof module.init !== "function"
+            ){
+
+
+                this.logger.warn(
+                    `${module.name} has no init method`
+                );
+
+
+                return;
+
+
+            }
+
+
+
+
+
+            module.init(
+                this.context
+            );
+
+
 
 
             this.logger.info(
-                `HyperCore Engine v${this.version.get()} Started 🚀`
+                `${module.name} initialized`
             );
 
 
-
-            // Detect framework
-
-            const framework =
-                this.framework.detect();
-
-
-
-            this.logger.info(
-                `Framework Detected: ${framework}`
-            );
-
-
-
-            // Store framework
-
-            this.frameworkName =
-                framework;
-
-
-
-            // Dispatch ready event
-
-            this.events.emit(
-                "engine:init",
-                {
-
-                    version:
-                    this.version.get(),
-
-                    framework
-
-                }
-            );
-
-
-
-            // Load registered modules
-
-            this.loader.loadAll({
-
-                config:
-                this.config,
-
-                logger:
-                this.logger,
-
-                events:
-                this.events,
-
-                framework
-
-            });
-
-
-
-            this.started = true;
-
-
-
-            this.logger.info(
-                "HyperCore Ready ✅"
-            );
-
-
-
-            // Expose globally
-
-            window.HyperCore =
-            this;
 
 
 
@@ -161,31 +346,56 @@ export class HyperCore {
         catch(error){
 
 
-            this.logger.error(
-                "Engine initialization failed"
-            );
+
+            if(
+                this.options.safeMode
+            ){
 
 
-            this.logger.error(error);
+                this.logger.error(
+                    `${module.name} failed safely`,
+                    error
+                );
+
+
+                return;
+
+
+            }
+
+
+
+
+
+            throw error;
+
 
 
         }
 
 
+
     }
 
 
 
 
+
+
+
+
+
     /**
-     * Register Optimization Module
+     * Get Module
      */
 
-    register(module){
+
+    getModule(name){
 
 
-        this.loader.register(
-            module
+        return this.modules.find(
+            module =>
+            module.name === name
         );
 
 
@@ -194,75 +404,44 @@ export class HyperCore {
 
 
 
-    /**
-     * Listen Events
-     */
-
-    on(event, callback){
-
-
-        this.events.on(
-            event,
-            callback
-        );
-
-
-    }
-
 
 
 
     /**
-     * Trigger Events
+     * Destroy Engine
      */
 
-    emit(event,data){
+
+    destroy(){
+
+
+
+        this.modules = [];
+
+        this.moduleNames.clear();
+
+
+
+        this.initialized =
+            false;
+
 
 
         this.events.emit(
-            event,
-            data
+            "core:destroy"
         );
 
 
+
+        this.logger.info(
+            "HyperCore destroyed"
+        );
+
+
+
     }
 
 
-
-
-
-    /**
-     * Get Engine Info
-     */
-
-    info(){
-
-
-        return {
-
-
-            name:
-            "HyperCore",
-
-
-            version:
-            this.version.get(),
-
-
-            framework:
-            this.frameworkName || "Unknown",
-
-
-            status:
-            this.started
-            ? "Running"
-            : "Stopped"
-
-
-        };
-
-
-    }
 
 
 
