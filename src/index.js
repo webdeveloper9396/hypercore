@@ -15,6 +15,8 @@ import JSOptimizer from "./modules/JSOptimizer/index.js";
 
 import FontOptimizer from "./modules/FontOptimizer/index.js";
 
+import LazyLoader from "./modules/LazyLoader/index.js";
+
 
 // Create HyperCore instance
 
@@ -38,6 +40,8 @@ hypercore.register(CSSOptimizer);
 hypercore.register(JSOptimizer);
 
 hypercore.register(FontOptimizer);
+
+hypercore.register(LazyLoader);
 
 
 // Start Engine
