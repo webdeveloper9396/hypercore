@@ -9,6 +9,8 @@ import { HyperCore } from "./core/Engine.js";
 import ImageOptimizer from "./modules/ImageOptimizer/index.js";
 import LCPOptimizer from "./modules/LCPOptimizer/index.js";
 
+import CSSOptimizer from "./modules/CSSOptimizer/index.js";
+
 
 // Create HyperCore instance
 
@@ -26,6 +28,8 @@ const hypercore = new HyperCore({
 hypercore.register(ImageOptimizer);
 
 hypercore.register(LCPOptimizer);
+
+hypercore.register(CSSOptimizer);
 
 
 // Start Engine
