@@ -29,6 +29,7 @@
     "url": "https://github.com/rahulkumar/hypercore.git"
   },
   "devDependencies": {
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "terser": "^5.43.1"
   }
 }
