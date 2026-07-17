@@ -1,9 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>HyperCore Test</title>
-</head>
-
 <body>
 
 <h1>HyperCore Test</h1>
@@ -11,7 +7,13 @@
 <script src="./dist/hypercore.min.js"></script>
 
 <script>
-console.log("HyperCore:", window.HyperCore);
+console.log("Window Object:", window.HyperCore);
+
+if (window.HyperCore) {
+    document.body.innerHTML += "<p>✅ HyperCore Loaded Successfully</p>";
+} else {
+    document.body.innerHTML += "<p>❌ HyperCore Not Loaded</p>";
+}
 </script>
 
 </body>
